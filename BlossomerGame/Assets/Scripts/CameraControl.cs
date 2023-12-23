@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CameraControl : MonoBehaviour
 {
-
+    public PlayerControls playerControls;
     public Transform target;
 
     public Vector3 offset;
@@ -16,6 +17,8 @@ public class CameraControl : MonoBehaviour
     public Transform pivot;
 
     public Rigidbody cam;
+
+    private InputAction look;
 
     public float maxViewingAngle;
     public float minViewingAngle;
@@ -35,6 +38,22 @@ public class CameraControl : MonoBehaviour
         pivot.transform.parent = null;
 
         Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void Awake()
+    {
+        playerControls = new PlayerControls();
+    }
+
+    private void OnEnable()
+    {
+        look = playerControls.Player.Move;
+        look.Enable();
+    }
+
+    private void OnDisable()
+    {
+        look.Disable();
     }
 
     // Update is called once per frame

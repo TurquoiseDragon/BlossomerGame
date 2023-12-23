@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -8,6 +9,10 @@ public class PlayerMovement : MonoBehaviour
     public CapsuleCollider hitbox;
     public float moveSpeed;
     public float jumpForce;
+    public PlayerControls playerControls;
+
+    private InputAction move;
+    private InputAction fire;
 
     public bool a;
     public bool b;
@@ -52,11 +57,34 @@ public class PlayerMovement : MonoBehaviour
         c = false;
     }
 
+    private void Awake()
+    {
+        playerControls = new PlayerControls();
+    }
+
+    private void OnEnable()
+    {
+        move = playerControls.Player.Move;
+        move.Enable();
+
+        fire = playerControls.Player.Fire;
+        fire.Enable();
+        fire.performed += Fire;
+    }
+
+    private void OnDisable()
+    {
+        move.Disable();
+        fire.Disable();
+    }
+
     // Update is called once per frame
     void Update()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float verticalInput = Input.GetAxis("Vertical");
+        //float horizontalInput = Input.GetAxis("Horizontal");
+        //float verticalInput = Input.GetAxis("Vertical");
+
+        moveDirection = move.ReadValue<Vector2>();
 
         Vector3 camForward = cam.forward;
         Vector3 camRight = cam.right;
@@ -64,10 +92,10 @@ public class PlayerMovement : MonoBehaviour
         camForward.y = 0;
         camRight.y = 0;
 
-        Vector3 forwardRelative = camForward * verticalInput;
-        Vector3 rightRelative = camRight * horizontalInput;
+        Vector3 forwardRelative = camForward * moveDirection.x;
+        Vector3 rightRelative = camRight * moveDirection.y;
 
-        //moveDirection = forwardRelative + rightRelative;
+        moveDirection = forwardRelative + rightRelative;
 
         //moveDirection = new Vector3(horizontalInput * moveSpeed, moveDirection.y, verticalInput * moveSpeed);
         if (knockbackCounter <= 0)
@@ -130,7 +158,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //move player in different directions when camera looks in different directions
-        if (horizontalInput != 0 || verticalInput != 0)
+        if (moveDirection.x != 0 || moveDirection.y != 0)
         {
             transform.rotation = Quaternion.Euler(0f, pivot.rotation.eulerAngles.y, 0f);
             Quaternion newRotation = Quaternion.LookRotation(new Vector3(moveDirection.x, 0f, moveDirection.z));
@@ -138,7 +166,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         anim.SetBool("isGrounded", Ctrl.isGrounded);
-        anim.SetFloat("Speed", (Mathf.Abs(verticalInput)) + Mathf.Abs(horizontalInput));
+        anim.SetFloat("Speed", (Mathf.Abs(moveDirection.y)) + Mathf.Abs(moveDirection.x));
 
     }
 
@@ -149,6 +177,13 @@ public class PlayerMovement : MonoBehaviour
         moveDirection = direction * knockbackForce;
         moveDirection.y = knockbackForce;
     }
+
+    private void Fire(InputAction.CallbackContext context)
+    {
+        Debug.Log("we fired");
+    }
+    
+}
 
     /*public IEnumerator LeapLeaves()
     {
@@ -232,4 +267,4 @@ public class PlayerMovement : MonoBehaviour
         } 
     } */
 
-}
+
